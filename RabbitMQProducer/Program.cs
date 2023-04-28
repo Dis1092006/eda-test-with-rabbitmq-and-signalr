@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using RabbitMQ.Client;
 
-Console.WriteLine("Start");
+Console.WriteLine("Producer starting ...");
 
 const string exchangeName = "amq.direct";
 const string queueName = "some-queue";
