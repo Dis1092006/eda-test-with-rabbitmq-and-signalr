@@ -1,10 +1,12 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Producer", "Producer\Producer.csproj", "{19D26BA6-0574-4A98-9598-8639AC2ECA0A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RabbitMQProducer", "RabbitMQProducer\RabbitMQProducer.csproj", "{19D26BA6-0574-4A98-9598-8639AC2ECA0A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SignalRHub", "SignalRHub\SignalRHub.csproj", "{CC279FC5-C8AB-4D2E-9B13-5F4669831E64}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SignalRClient", "SignalRClient\SignalRClient.csproj", "{F701331A-DD63-42D2-A3DC-9832C498B248}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RabbitMQConsumer", "RabbitMQConsumer\RabbitMQConsumer.csproj", "{9B0156A4-E2EE-4933-BA73-8DED6578B012}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -24,5 +26,9 @@ Global
 		{F701331A-DD63-42D2-A3DC-9832C498B248}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F701331A-DD63-42D2-A3DC-9832C498B248}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F701331A-DD63-42D2-A3DC-9832C498B248}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9B0156A4-E2EE-4933-BA73-8DED6578B012}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9B0156A4-E2EE-4933-BA73-8DED6578B012}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9B0156A4-E2EE-4933-BA73-8DED6578B012}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9B0156A4-E2EE-4933-BA73-8DED6578B012}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
