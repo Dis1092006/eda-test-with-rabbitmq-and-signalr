@@ -2,8 +2,10 @@
 
 Console.WriteLine("SignalR client starting ...");
 
+const string hubUrl = "https://localhost:7180/hub";
+
 var connection = new HubConnectionBuilder()
-    .WithUrl("https://localhost:7180/hub")
+    .WithUrl(hubUrl)
     .Build();
 await connection.StartAsync();
 
