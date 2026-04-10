@@ -2,7 +2,7 @@
 
 A proof-of-concept project demonstrating **Event-Driven Architecture (EDA)** using **RabbitMQ** as a message broker and **ASP.NET Core SignalR** for real-time push notifications to connected clients.
 
-All projects target **.NET 6**.
+All projects target **.NET 10**.
 
 ---
 
@@ -33,36 +33,36 @@ A console application that publishes messages to RabbitMQ.
 - Reads user input in a loop and publishes each line as a message.
 - Type `exit` to quit.
 
-**NuGet dependencies:** `RabbitMQ.Client 6.5.0`
+**NuGet dependencies:** `RabbitMQ.Client 7.2.1`
 
 ### RabbitMQConsumer
 A console application hosting a `BackgroundService` that consumes messages from RabbitMQ.
 - Subscribes to the same `some-queue` queue.
 - On each received message, sends an HTTP POST request to `https://localhost:7180/message` (SignalRHub).
 
-**NuGet dependencies:** `RabbitMQ.Client 6.5.0`, `Microsoft.Extensions.Hosting 7.0.1`
+**NuGet dependencies:** `RabbitMQ.Client 7.2.1`, `Microsoft.Extensions.Hosting 10.0.0`
 
 ### SignalRHub
 An ASP.NET Core Web API + SignalR server — the central message hub.
 - Listens on `https://localhost:7180`.
 - **REST endpoint** `POST /message`: accepts a JSON string and broadcasts it to all connected SignalR clients via the `ReceiveMessage` event.
 - **SignalR Hub** at `/hub` with method `SendMessage(user, message)`.
-- Swagger UI available at `/swagger` (in Development mode).
+- Interactive API docs available at `/scalar/v1` (in Development mode) via [Scalar](https://scalar.com).
 
-**NuGet dependencies:** `Swashbuckle.AspNetCore 6.5.0`
+**NuGet dependencies:** `Microsoft.AspNetCore.OpenApi 10.0.0`, `Scalar.AspNetCore 2.13.21`
 
 ### SignalRClient
 A console application that connects to the SignalR Hub and prints incoming messages.
 - Connects to `https://localhost:7180/hub`.
 - Listens for the `ReceiveMessage` event and prints `{user}: {message}` to the console.
 
-**NuGet dependencies:** `Microsoft.AspNetCore.SignalR.Client 6.0.16`
+**NuGet dependencies:** `Microsoft.AspNetCore.SignalR.Client 10.0.0`
 
 ---
 
 ## Prerequisites
 
-- [.NET 6 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/6.0)
+- [.NET 10 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/10.0)
 - **RabbitMQ** running on `localhost:5672`
 
 The easiest way to run RabbitMQ locally is via Docker:
@@ -183,21 +183,21 @@ curl.exe --% -k -X POST https://localhost:7180/message -H "Content-Type: applica
 
 A successful call returns HTTP **200 OK** with an empty body.
 
-#### Option B: Swagger UI
+#### Option B: Scalar API Reference
 
 1. Open your browser and navigate to:
    ```
-   https://localhost:7180/swagger
+   https://localhost:7180/scalar/v1
    ```
 2. If the browser shows a certificate warning, click **Advanced → Proceed to localhost**.
-3. Expand the **POST /message** endpoint.
-4. Click **Try it out**.
-5. In the **Request body** field enter a JSON string (quotes are required):
+3. Find the **POST /message** endpoint in the list.
+4. Click on it, then click **Test Request**.
+5. In the **Body** section set the content type to `application/json` and enter a JSON string (quotes are required):
    ```json
-   "Hello from Swagger!"
+   "Hello from Scalar!"
    ```
-6. Click **Execute**.
-7. Verify the response code is **200**.
+6. Click **Send**.
+7. Verify the response status is **200**.
 
 ### Step 4 — Check the result
 
@@ -208,7 +208,7 @@ Server: Hello from curl!
 ```
 or
 ```
-Server: Hello from Swagger!
+Server: Hello from Scalar!
 ```
 
 You can send as many requests as you like — every message will appear in the client console instantly, confirming that the **HTTP → SignalR Hub → WebSocket → Client** pipeline works correctly.

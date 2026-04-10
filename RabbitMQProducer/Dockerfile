@@ -1,18 +1,18 @@
-﻿FROM mcr.microsoft.com/dotnet/runtime:6.0 AS base
+﻿FROM mcr.microsoft.com/dotnet/runtime:10.0 AS base
 WORKDIR /app
 
-FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
-COPY ["Producer/Producer.csproj", "Producer/"]
-RUN dotnet restore "Producer/Producer.csproj"
+COPY ["RabbitMQProducer/RabbitMQProducer.csproj", "RabbitMQProducer/"]
+RUN dotnet restore "RabbitMQProducer/RabbitMQProducer.csproj"
 COPY . .
-WORKDIR "/src/Producer"
-RUN dotnet build "Producer.csproj" -c Release -o /app/build
+WORKDIR "/src/RabbitMQProducer"
+RUN dotnet build "RabbitMQProducer.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "Producer.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "RabbitMQProducer.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "Producer.dll"]
+ENTRYPOINT ["dotnet", "RabbitMQProducer.dll"]

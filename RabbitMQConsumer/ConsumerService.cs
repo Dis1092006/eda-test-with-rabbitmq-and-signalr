@@ -8,27 +8,24 @@ namespace RabbitMQConsumer;
 
 public class ConsumerService : BackgroundService
 {
-    private readonly IModel _channel;
-
     private const string ExchangeName = "amq.direct";
     private const string QueueName = "some-queue";
     private const string RoutingKey = "some-routing-key";
 
     private const string MessageProcessorEndpoint = "https://localhost:7180/message";
 
-    public ConsumerService()
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var factory = new ConnectionFactory() { HostName = "localhost" };
-        var connection = factory.CreateConnection();
-        _channel = connection.CreateModel();
-        _channel.QueueDeclare(QueueName, true, false, false);
-        _channel.QueueBind(QueueName, ExchangeName, RoutingKey);
-    }
-    
-    protected override Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        var consumer = new EventingBasicConsumer(_channel);
-        consumer.Received += (model, ea) =>
+        var factory = new ConnectionFactory { HostName = "localhost" };
+        await using var connection = await factory.CreateConnectionAsync(stoppingToken);
+        await using var channel = await connection.CreateChannelAsync(cancellationToken: stoppingToken);
+
+        await channel.QueueDeclareAsync(QueueName, durable: true, exclusive: false, autoDelete: false,
+            cancellationToken: stoppingToken);
+        await channel.QueueBindAsync(QueueName, ExchangeName, RoutingKey, cancellationToken: stoppingToken);
+
+        var consumer = new AsyncEventingBasicConsumer(channel);
+        consumer.ReceivedAsync += async (_, ea) =>
         {
             var body = ea.Body.ToArray();
             var message = Encoding.UTF8.GetString(body);
@@ -40,12 +37,13 @@ public class ConsumerService : BackgroundService
                 ServerCertificateCustomValidationCallback =
                     HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
             };
-            var client = new HttpClient(handler);
-            _ = client.PostAsJsonAsync(MessageProcessorEndpoint, message).Result;
+            using var client = new HttpClient(handler);
+            await client.PostAsJsonAsync(MessageProcessorEndpoint, message);
         };
-        
-        _channel.BasicConsume(QueueName, true, consumer);
-        
-        return Task.CompletedTask;
+
+        await channel.BasicConsumeAsync(QueueName, autoAck: true, consumer: consumer,
+            cancellationToken: stoppingToken);
+
+        await Task.Delay(Timeout.Infinite, stoppingToken);
     }
 }
