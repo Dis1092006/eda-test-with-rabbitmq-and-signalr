@@ -169,15 +169,17 @@ Choose one of the following options:
 
 #### Option A: curl
 
+PowerShell 5.1 strips double quotes when passing arguments to external executables.
+Use the stop-parsing symbol `--%` to bypass this:
+
 ```powershell
-curl -k -X POST https://localhost:7180/message `
-  -H "Content-Type: application/json" `
-  -d '"Hello from curl!"'
+curl.exe --% -k -X POST https://localhost:7180/message -H "Content-Type: application/json" -d "\"Hello from curl!\""
 ```
 
 > **Notes:**
+> - `--% ` (stop-parsing symbol) tells PowerShell to pass everything after it verbatim to the process, without any quote processing.
 > - The `-k` flag skips SSL certificate validation (the dev certificate is self-signed).
-> - The message body must be a **JSON string** — wrap it in double quotes inside single quotes: `'"Hello from curl!"'`. The `[FromBody] string message` parameter expects a valid JSON string value.
+> - The message body must be a valid **JSON string**, i.e. surrounded by double quotes: `"Hello from curl!"`.
 
 A successful call returns HTTP **200 OK** with an empty body.
 
