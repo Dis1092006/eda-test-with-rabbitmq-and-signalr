@@ -34,9 +34,14 @@ public class ConsumerService : BackgroundService
             var message = Encoding.UTF8.GetString(body);
 
             Console.WriteLine($"Message received: {message}");
-            
-            var client = new HttpClient();
-            _ = client.PostAsJsonAsync<string>(MessageProcessorEndpoint, message).Result;
+
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback =
+                    HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+            };
+            var client = new HttpClient(handler);
+            _ = client.PostAsJsonAsync(MessageProcessorEndpoint, message).Result;
         };
         
         _channel.BasicConsume(QueueName, true, consumer);
