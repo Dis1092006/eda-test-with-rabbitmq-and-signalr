@@ -19,6 +19,7 @@ public class MessageHub : Hub
 
     public Task Subscribe(string filter)
     {
+        if (string.IsNullOrWhiteSpace(filter)) return Task.CompletedTask;
         _filterService.SetFilter(Context.ConnectionId, filter);
         return Task.CompletedTask;
     }

@@ -51,5 +51,6 @@ export async function startConnection(): Promise<void> {
 
 export async function subscribe(filter: string): Promise<void> {
   const conn = getConnection()
+  if (conn.state !== signalR.HubConnectionState.Connected) return
   await conn.invoke('Subscribe', filter)
 }

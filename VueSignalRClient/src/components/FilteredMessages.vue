@@ -55,7 +55,11 @@ const filterInput = ref('')
 async function onSubscribe() {
   if (!filterInput.value) return
   store.setFilter(filterInput.value)
-  await subscribe(filterInput.value)
+  try {
+    await subscribe(filterInput.value)
+  } catch (err) {
+    console.error('Subscribe failed:', err)
+  }
   filterInput.value = ''
 }
 
