@@ -13,6 +13,10 @@ All projects target **.NET 10**.
 │  RabbitMQProducer│ ──────────────────▶  │ RabbitMQConsumer │ ──────────────▶ │   SignalRHub     │ ───────────────▶ │  SignalRClient   │
 │  (console app)   │                      │  (background svc)│                 │ (ASP.NET Web API)│                  │  (console app)   │
 └──────────────────┘                      └──────────────────┘                 └──────────────────┘                  └──────────────────┘
+                                                                                        │                SignalR (WS)   ┌──────────────────┐
+                                                                                        └─────────────────────────────▶ │ VueSignalRClient │
+                                                                                                                        │  (browser app)   │
+                                                                                                                        └──────────────────┘
 ```
 
 **Message flow:**
@@ -57,6 +61,16 @@ A console application that connects to the SignalR Hub and prints incoming messa
 - Listens for the `ReceiveMessage` event and prints `{user}: {message}` to the console.
 
 **NuGet dependencies:** `Microsoft.AspNetCore.SignalR.Client 10.0.0`
+
+### VueSignalRClient
+A Vue 3 + TypeScript browser frontend that connects to the SignalR Hub.
+- Displays all incoming messages in a real-time feed (left panel).
+- Accepts a substring filter, sends it to the hub via `Subscribe(filter)`, and displays only server-filtered messages in a second panel (right panel).
+- Auto-reconnects on connection loss and re-registers the active filter after reconnect.
+
+**Dependencies:** Vue 3, Vite, Vuetify 4, Pinia, @microsoft/signalr
+
+**Prerequisites:** Node.js 20+
 
 ---
 
@@ -215,6 +229,50 @@ You can send as many requests as you like — every message will appear in the c
 
 ---
 
+## Running VueSignalRClient
+
+### Prerequisites
+- Node.js 20 or later
+- The .NET developer certificate must be trusted in your browser. If you see a connection error, navigate to `https://localhost:7180/scalar/v1` once, accept the certificate warning, then reload the Vue app.
+
+### Step 1 — Install dependencies
+
+```powershell
+cd VueSignalRClient
+npm install
+```
+
+### Step 2 — Start the dev server
+
+```powershell
+npm run dev
+```
+
+The app will be available at `http://localhost:5173`.
+
+### Step 3 — Start SignalRHub (if not already running)
+
+```powershell
+cd SignalRHub
+dotnet run
+```
+
+### How to use
+
+1. Open `http://localhost:5173` in your browser.
+2. The left panel shows all messages as they arrive.
+3. In the right panel, type a substring in the filter field and click **Subscribe**. Only messages containing that substring (case-insensitive) will appear in the right panel.
+4. You can change the filter at any time by entering a new value and clicking **Subscribe** again.
+
+### Running tests
+
+```powershell
+cd VueSignalRClient
+npm test
+```
+
+---
+
 ## Project Structure
 
 ```
@@ -223,9 +281,13 @@ eda-test-with-rabbitmq-and-signalr/
 ├── RabbitMQProducer/           # Publishes messages to RabbitMQ
 ├── RabbitMQConsumer/           # Consumes from RabbitMQ, forwards to SignalRHub
 ├── SignalRHub/                 # ASP.NET Core Web API + SignalR server
-│   └── Controllers/
-│       └── MessageController.cs
-└── SignalRClient/              # Console SignalR client
+│   ├── Controllers/
+│   │   └── MessageController.cs
+│   └── Services/
+│       └── FilterService.cs
+├── SignalRClient/              # Console SignalR client
+├── SignalRHub.Tests/           # xUnit tests for SignalRHub
+└── VueSignalRClient/           # Vue 3 browser SignalR client
 ```
 
 ---
