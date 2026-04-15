@@ -1,7 +1,7 @@
 import * as signalR from '@microsoft/signalr'
 import { useMessagesStore } from '@/stores/messages'
 
-const HUB_URL = 'https://localhost:7180/hub'
+const HUB_URL = import.meta.env.VITE_HUB_URL ?? 'https://localhost:7180/hub'
 
 let connection: signalR.HubConnection | null = null
 
