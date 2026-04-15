@@ -7,70 +7,109 @@ public class FilterServiceTests
     private readonly FilterService _sut = new();
 
     [Fact]
-    public void GetMatchingConnections_ReturnsConnection_WhenMessageContainsFilter()
+    public void GetConnectionGroup_ReturnsNull_WhenNoSubscription()
     {
-        _sut.SetFilter("conn1", "hello");
-
-        var result = _sut.GetMatchingConnections("Hello World");
-
-        Assert.Contains("conn1", result);
+        Assert.Null(_sut.GetConnectionGroup("conn1"));
     }
 
     [Fact]
-    public void GetMatchingConnections_DoesNotReturnConnection_WhenMessageDoesNotContainFilter()
+    public void TrackSubscription_StoresGroup_ForConnection()
     {
-        _sut.SetFilter("conn1", "xyz");
+        _sut.TrackSubscription("conn1", null, "error");
 
-        var result = _sut.GetMatchingConnections("Hello World");
-
-        Assert.DoesNotContain("conn1", result);
+        Assert.Equal("error", _sut.GetConnectionGroup("conn1"));
     }
 
     [Fact]
-    public void GetMatchingConnections_IsCaseInsensitive()
+    public void TrackSubscription_OverwritesGroup_WhenSwitchingFilter()
     {
-        _sut.SetFilter("conn1", "HELLO");
+        _sut.TrackSubscription("conn1", null, "error");
+        _sut.TrackSubscription("conn1", "error", "info");
 
-        var result = _sut.GetMatchingConnections("hello world");
-
-        Assert.Contains("conn1", result);
+        Assert.Equal("info", _sut.GetConnectionGroup("conn1"));
     }
 
     [Fact]
-    public void RemoveFilter_RemovesConnection()
+    public void RemoveConnection_ClearsGroupForConnection()
     {
-        _sut.SetFilter("conn1", "hello");
-        _sut.RemoveFilter("conn1");
+        _sut.TrackSubscription("conn1", null, "error");
+        _sut.RemoveConnection("conn1");
 
-        var result = _sut.GetMatchingConnections("Hello World");
-
-        Assert.DoesNotContain("conn1", result);
+        Assert.Null(_sut.GetConnectionGroup("conn1"));
     }
 
     [Fact]
-    public void SetFilter_OverwritesPreviousFilter()
+    public void GetMatchingGroups_ReturnsGroup_WhenMessageContainsFilter()
     {
-        _sut.SetFilter("conn1", "hello");
-        _sut.SetFilter("conn1", "world");
+        _sut.TrackSubscription("conn1", null, "error");
 
-        var matchesOld = _sut.GetMatchingConnections("hello test");
-        var matchesNew = _sut.GetMatchingConnections("world test");
+        var result = _sut.GetMatchingGroups("error occurred");
 
-        Assert.DoesNotContain("conn1", matchesOld);
-        Assert.Contains("conn1", matchesNew);
+        Assert.Contains("error", result);
     }
 
     [Fact]
-    public void GetMatchingConnections_ReturnsMultipleConnections_WhenMultipleMatch()
+    public void GetMatchingGroups_DoesNotReturnGroup_WhenMessageDoesNotContainFilter()
     {
-        _sut.SetFilter("conn1", "error");
-        _sut.SetFilter("conn2", "error");
-        _sut.SetFilter("conn3", "info");
+        _sut.TrackSubscription("conn1", null, "error");
 
-        var result = _sut.GetMatchingConnections("error occurred").ToList();
+        var result = _sut.GetMatchingGroups("hello world");
 
-        Assert.Contains("conn1", result);
-        Assert.Contains("conn2", result);
-        Assert.DoesNotContain("conn3", result);
+        Assert.DoesNotContain("error", result);
+    }
+
+    [Fact]
+    public void GetMatchingGroups_IsCaseInsensitive()
+    {
+        _sut.TrackSubscription("conn1", null, "ERROR");
+
+        var result = _sut.GetMatchingGroups("error occurred");
+
+        Assert.Contains("ERROR", result);
+    }
+
+    [Fact]
+    public void GetMatchingGroups_ReturnsMultipleGroups_WhenMessageMatchesSeveral()
+    {
+        _sut.TrackSubscription("conn1", null, "error");
+        _sut.TrackSubscription("conn2", null, "info");
+
+        var result = _sut.GetMatchingGroups("error info message").ToList();
+
+        Assert.Contains("error", result);
+        Assert.Contains("info", result);
+    }
+
+    [Fact]
+    public void GetMatchingGroups_GroupRemainsActive_WhenOneOfTwoConnectionsLeaves()
+    {
+        _sut.TrackSubscription("conn1", null, "error");
+        _sut.TrackSubscription("conn2", null, "error");
+
+        _sut.RemoveConnection("conn1");
+
+        Assert.Contains("error", _sut.GetMatchingGroups("error occurred"));
+    }
+
+    [Fact]
+    public void GetMatchingGroups_GroupDisappears_WhenAllConnectionsLeave()
+    {
+        _sut.TrackSubscription("conn1", null, "error");
+        _sut.TrackSubscription("conn2", null, "error");
+
+        _sut.RemoveConnection("conn1");
+        _sut.RemoveConnection("conn2");
+
+        Assert.DoesNotContain("error", _sut.GetMatchingGroups("error occurred"));
+    }
+
+    [Fact]
+    public void TrackSubscription_OldGroupDisappears_WhenLastConnectionSwitches()
+    {
+        _sut.TrackSubscription("conn1", null, "error");
+        _sut.TrackSubscription("conn1", "error", "info");
+
+        Assert.DoesNotContain("error", _sut.GetMatchingGroups("error occurred"));
+        Assert.Contains("info", _sut.GetMatchingGroups("info message"));
     }
 }

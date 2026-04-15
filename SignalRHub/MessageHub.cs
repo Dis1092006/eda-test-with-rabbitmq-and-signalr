@@ -17,16 +17,25 @@ public class MessageHub : Hub
         await Clients.All.SendAsync("ReceiveMessage", user, message);
     }
 
-    public Task Subscribe(string filter)
+    public async Task Subscribe(string filter)
     {
-        if (string.IsNullOrWhiteSpace(filter)) return Task.CompletedTask;
-        _filterService.SetFilter(Context.ConnectionId, filter);
-        return Task.CompletedTask;
+        if (string.IsNullOrWhiteSpace(filter)) return;
+
+        var oldGroup = _filterService.GetConnectionGroup(Context.ConnectionId);
+        if (oldGroup != null)
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, oldGroup);
+
+        await Groups.AddToGroupAsync(Context.ConnectionId, filter);
+        _filterService.TrackSubscription(Context.ConnectionId, oldGroup, filter);
     }
 
-    public override Task OnDisconnectedAsync(Exception? exception)
+    public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        _filterService.RemoveFilter(Context.ConnectionId);
-        return base.OnDisconnectedAsync(exception);
+        var group = _filterService.GetConnectionGroup(Context.ConnectionId);
+        if (group != null)
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, group);
+
+        _filterService.RemoveConnection(Context.ConnectionId);
+        await base.OnDisconnectedAsync(exception);
     }
 }

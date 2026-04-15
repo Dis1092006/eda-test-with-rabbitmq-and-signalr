@@ -23,10 +23,9 @@ public class MessageController : ControllerBase
     {
         await _hubContext.Clients.All.SendAsync("ReceiveMessage", "Server", message);
 
-        var matchingConnections = _filterService.GetMatchingConnections(message).ToList();
-        if (matchingConnections.Count > 0)
+        foreach (var group in _filterService.GetMatchingGroups(message))
         {
-            await _hubContext.Clients.Clients(matchingConnections)
+            await _hubContext.Clients.Group(group)
                 .SendAsync("ReceiveFilteredMessage", "Server", message);
         }
 
